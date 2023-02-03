@@ -1,5 +1,7 @@
-package com.rjeangilles.unwire.challenge.controller.exception
+package com.rjeangilles.unwire.challenge.controller
 
+import com.rjeangilles.unwire.challenge.service.IdNotNullException
+import com.rjeangilles.unwire.challenge.service.NotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler

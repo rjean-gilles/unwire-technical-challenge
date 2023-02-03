@@ -1,7 +1,5 @@
 package com.rjeangilles.unwire.challenge.service
 
-import com.rjeangilles.unwire.challenge.controller.exception.JourneyIdNotNullException
-import com.rjeangilles.unwire.challenge.controller.exception.JourneyNotFoundException
 import com.rjeangilles.unwire.challenge.model.Journey
 import com.rjeangilles.unwire.challenge.model.JourneyId
 import com.rjeangilles.unwire.challenge.model.UserId
