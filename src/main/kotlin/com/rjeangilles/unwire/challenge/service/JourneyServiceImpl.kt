@@ -13,24 +13,24 @@ import java.util.function.Supplier
 class JourneyServiceImpl(
     private val repository: JourneyRepository
 ) : JourneyService {
-    override fun create(userId: UserId, newJourney: Journey): Journey {
+    override suspend fun create(userId: UserId, newJourney: Journey): Journey {
         if (newJourney.id != null) {
             throw JourneyIdNotNullException(newJourney.id)
         }
         return repository.create(userId, newJourney)
     }
-    override fun getAllByUserId(userId: UserId): Iterable<Journey> {
+    override suspend fun getAllByUserId(userId: UserId): Iterable<Journey> {
         // TODO: throw UserNotFoundException if user does not exist
         return repository.findAllByUserId(userId)
     }
-    override fun getById(journeyId: JourneyId): Journey {
+    override suspend fun getById(journeyId: JourneyId): Journey {
         return repository.findById(journeyId)
             .orElseThrow(Supplier<RuntimeException> { JourneyNotFoundException(journeyId) })
     }
-    override fun deleteById(journeyId: JourneyId) {
+    override suspend fun deleteById(journeyId: JourneyId) {
         repository.deleteById(journeyId)
     }
-    override fun deleteAllByUserId(userId: UserId) {
+    override suspend fun deleteAllByUserId(userId: UserId) {
         repository.deleteAllByUserId(userId)
     }
 

@@ -17,4 +17,4 @@ abstract class IdNotNullException(message: String)
     : RuntimeException(message)
 
 class JourneyIdNotNullException(val id: JourneyId)
-    : IdNotNullException("Id should be undefined, but found $id")
+    : IdNotNullException("Journey id should be undefined, but found $id")

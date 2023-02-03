@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.PathVariable
 import java.util.*
 
 interface JourneyService {
-    fun create(userId: UserId, newJourney: Journey): Journey
-    fun getAllByUserId(userId: UserId): Iterable<Journey>
-    fun getById(journeyId: JourneyId): Journey
-    fun deleteById(journeyId: JourneyId)
-    fun deleteAllByUserId(userId: UserId)
+    suspend fun create(userId: UserId, newJourney: Journey): Journey
+    suspend fun getAllByUserId(userId: UserId): Iterable<Journey>
+    suspend fun getById(journeyId: JourneyId): Journey
+    suspend fun deleteById(journeyId: JourneyId)
+    suspend fun deleteAllByUserId(userId: UserId)
 }

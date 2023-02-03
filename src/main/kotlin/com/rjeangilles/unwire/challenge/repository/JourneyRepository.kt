@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.PathVariable
 import java.util.*
 
 interface JourneyRepository {
-    fun create(userId: UserId, newJourney: Journey): Journey
-    fun findAllByUserId(userId: UserId): Iterable<Journey>
-    fun findById(journeyId: JourneyId): Optional<Journey>
-    fun existsById(journeyId: JourneyId): Boolean
-    fun deleteById(journeyId: JourneyId)
-    fun deleteAllByUserId(userId: JourneyId)
+    suspend fun create(userId: UserId, newJourney: Journey): Journey
+    suspend fun findAllByUserId(userId: UserId): Iterable<Journey>
+    suspend fun findById(journeyId: JourneyId): Optional<Journey>
+    suspend fun existsById(journeyId: JourneyId): Boolean
+    suspend fun deleteById(journeyId: JourneyId)
+    suspend fun deleteAllByUserId(userId: JourneyId)
 }
