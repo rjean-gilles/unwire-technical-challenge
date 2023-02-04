@@ -28,15 +28,19 @@ in the form of a unit test named ```PerfTests```.
 
 As unit tests are not really suited to performance/load testing, I also 
 created some [Gatling](https://gatling.io) simulations.
-To run the simulations, first start the server locally by running the "bootRun" gradle task, then run the gradle "gatlingRun" task
+To run the simulations, first start the server locally by running the "bootRun" gradle task. You can set the 
+```load-test-data``` system property to true in order to preload test data into the cache, for more realistic
+testing conditions (otherwise the cache will be empty, as it is non-persistent).
 ```
-> gradlew bootRun
+> gradlew bootRun -Dload-test-data=true
 .....
-
-# In another terminal:
+```
+Then run the gradle "gatlingRun" task (in another terminal):
+```
 > gradlew gatlingRun
 .....
 ```
-Gatling will run the queries defined in the simulation files (see ```src\gatling\kotlin\journeyapi```) 
-and print a performance report on the standard output.
+Gatling will run the queries defined in the simulation files (see ```src\gatling\kotlin\journeyapi```). 
+At the end it will a performance summary on the standard output and 
+generate a report that can be opened in a web browser.
 

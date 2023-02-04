@@ -4,6 +4,9 @@ import com.rjeangilles.unwire.challenge.model.Journey
 import com.rjeangilles.unwire.challenge.model.JourneyId
 import com.rjeangilles.unwire.challenge.model.UserId
 import com.rjeangilles.unwire.challenge.repository.JourneyRepository
+import com.rjeangilles.unwire.challenge.repository.test.LoadTestingDataLoader
+import jakarta.annotation.PostConstruct
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import java.util.function.Supplier
 
@@ -11,6 +14,14 @@ import java.util.function.Supplier
 class JourneyServiceImpl(
     private val repository: JourneyRepository
 ) : JourneyService {
+
+    @PostConstruct
+    fun initialize() {
+        if (System.getProperty("load-test-data", "false") == "true") {
+            LoadTestingDataLoader(this).load()
+        }
+    }
+
     override suspend fun create(userId: UserId, newJourney: Journey): Journey {
         if (newJourney.id != null) {
             throw JourneyIdNotNullException(newJourney.id)

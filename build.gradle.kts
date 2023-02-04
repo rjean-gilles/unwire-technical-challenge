@@ -41,11 +41,16 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	setMaxHeapSize("2048m") // We need significant memory for PerfTests
-
 }
 
 gatling {
 	// WARNING: options below only work when logback config file isn't provided
 	logLevel = "WARN" // logback root level
 	logHttp = io.gatling.gradle.LogHttp.NONE // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.run.BootRun> {
+	// Allow to pass the "load-test-data" property from the command
+	// line of gradle/gradlew
+	systemProperty("load-test-data", System.getProperty("load-test-data"))
 }

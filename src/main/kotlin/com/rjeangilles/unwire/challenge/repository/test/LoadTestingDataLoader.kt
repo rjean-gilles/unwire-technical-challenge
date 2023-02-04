@@ -76,6 +76,9 @@ class LoadTestingDataLoader(
     private val journeyGenerator = RandomTestJourneyGenerator(journeyService)
 
     fun load() {
+        // We want to make sure that the data is loaded before accepting
+        // queries, so we have to block. It is bad, but acceptable given
+        // that this is only for (performance) tests.
         runBlocking {
             for (u in 0 until generatedUserCount) {
                 if (u % 10000 == 0) {
