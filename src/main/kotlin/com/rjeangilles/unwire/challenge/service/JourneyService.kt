@@ -12,4 +12,5 @@ interface JourneyService {
     suspend fun getById(journeyId: JourneyId): Journey
     suspend fun deleteById(journeyId: JourneyId)
     suspend fun deleteAllByUserId(userId: UserId)
+    suspend fun deleteAll()
 }

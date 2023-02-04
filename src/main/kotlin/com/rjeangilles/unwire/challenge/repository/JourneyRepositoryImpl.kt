@@ -3,7 +3,9 @@ package com.rjeangilles.unwire.challenge.repository
 import com.rjeangilles.unwire.challenge.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.*
@@ -11,7 +13,16 @@ import java.util.concurrent.atomic.AtomicLong
 
 @Repository
 class JourneyRepositoryImpl : JourneyRepository {
+    // Ideally we would like to use a ReadWrite Lock,
+    // but the standard library does not provide one
+    // for coroutines, so we settle for a Mutex.
     private val mutex = Mutex()
+    private suspend inline fun <T> withReadLock(owner: Any? = null, action: () -> T): T {
+        return mutex.withLock(owner, action)
+    }
+    private suspend inline fun <T> withWriteLock(owner: Any? = null, action: () -> T): T {
+        return mutex.withLock(owner, action)
+    }
 
     private val userIdToJourneys: MutableMap<UserId, MutableList<Journey>> = mutableMapOf()
     private val journeyIdToJourney: MutableMap<JourneyId, Journey> = mutableMapOf()
@@ -23,7 +34,7 @@ class JourneyRepositoryImpl : JourneyRepository {
 
     private suspend fun insert(userId: UserId, newJourney: Journey) {
         val newJourneyId = requireNotNull(newJourney.id)
-        mutex.withLock {
+        withWriteLock {
             var list = userIdToJourneys.get(userId)
             if (list == null) {
                 list = mutableListOf<Journey>()
@@ -44,32 +55,26 @@ class JourneyRepositoryImpl : JourneyRepository {
         return insertedJourney
     }
 
-    private suspend fun createAll(userId: UserId, vararg newJourneys: Journey) {
-        for (newJourney in newJourneys) {
-            create(userId, newJourney)
-        }
-    }
-
     override suspend fun findAllByUserId(userId: UserId): Iterable<Journey> {
-        return mutex.withLock {
+        return withReadLock {
             userIdToJourneys.get(userId) ?: listOf()
         }
     }
 
     override suspend fun findById(journeyId: JourneyId): Optional<Journey> {
-        return mutex.withLock {
+        return withReadLock {
             Optional.ofNullable(journeyIdToJourney.get(journeyId))
         }
     }
 
     override suspend fun existsById(journeyId: JourneyId): Boolean {
-        return mutex.withLock {
+        return withReadLock {
             journeyIdToJourney.containsKey(journeyId)
         }
     }
 
     override suspend fun deleteById(journeyId: JourneyId) {
-        mutex.withLock {
+        withWriteLock {
             journeyIdToJourney.remove(journeyId)
             val userId = journeyIdToUserId.remove(journeyId)
             if (userId != null) {
@@ -79,7 +84,7 @@ class JourneyRepositoryImpl : JourneyRepository {
     }
 
     override suspend fun deleteAllByUserId(userId: UserId) {
-        mutex.withLock {
+        withWriteLock {
             val journeys = userIdToJourneys.remove(userId)
             if (journeys != null) {
                 for (journey in journeys) {
@@ -90,116 +95,11 @@ class JourneyRepositoryImpl : JourneyRepository {
         }
     }
 
-
-    // TEST
-    // TODO: remove me
-    init{
-        runBlocking {
-            createAll(
-                1,
-                Journey(
-                    startAddress = "1959 NE Pacific St",
-                    endAddress = "2100 W Genesee Turnpike",
-                    steps = listOf(
-                        Step(
-                            TravelMode.WALK,
-                            Instant.parse("2023-01-01T12:49:27Z"),
-                            Location(
-                                103,
-                                GeoPoint(43.547165, -106.626785)
-                            ),
-                            Instant.parse("2023-01-01T12:55:05Z"),
-                            Location(
-                                215,
-                                GeoPoint(43.991442, -97.837722)
-                            )
-                        ),
-                        Step(
-                            TravelMode.SUBWAY,
-                            Instant.parse("2023-01-01T12:56:33Z"),
-                            Location(
-                                103,
-                                GeoPoint(43.551234, -106.633333)
-                            ),
-                            Instant.parse("2023-01-01T13:10:12Z"),
-                            Location(
-                                215,
-                                GeoPoint(43.998163, -97.836534)
-                            )
-                        )
-                    )
-                ),
-                Journey(
-                    startAddress = "1620 S Mission St",
-                    endAddress = "1880 Willamette Falls Dr",
-                    steps = listOf(
-                        Step(
-                            TravelMode.BICYCLE,
-                            Instant.parse("2023-01-01T15:15:33Z"),
-                            Location(
-                                203,
-                                GeoPoint(43.551234, -106.633333)
-                            ),
-                            Instant.parse("2023-01-01T13:10:12Z"),
-                            Location(
-                                335,
-                                GeoPoint(43.998163, -97.836534)
-                            )
-                        )
-                    )
-                )
-            )
-            createAll(
-                2,
-                Journey(
-                    startLocation = Location(
-                        null,
-                        GeoPoint(43.547165, -106.626785)
-                    ),
-                    endAddress = "1880 Willamette Falls Dr",
-                    steps = listOf(
-                        Step(
-                            TravelMode.WALK,
-                            Instant.parse("2023-01-02T12:49:27Z"),
-                            Location(
-                                null,
-                                GeoPoint(43.547165, -106.626785)
-                            ),
-                            Instant.parse("2023-01-02T12:55:05Z"),
-                            Location(
-                                null,
-                                GeoPoint(43.95, -106.41)
-                            )
-                        ),
-                        Step(
-                            TravelMode.RAIL,
-                            Instant.parse("2023-01-02T12:56:33Z"),
-                            Location(
-                                71,
-                                GeoPoint(43.856, -106.512)
-                            ),
-                            Instant.parse("2023-01-02T13:10:12Z"),
-                            Location(
-                                215,
-                                GeoPoint(43.965, -106.432)
-                            )
-                        ),
-                        Step(
-                            TravelMode.WALK,
-                            Instant.parse("2023-01-02T13:15:35Z"),
-                            Location(
-                                null,
-                                GeoPoint(43.843, -106.298)
-                            ),
-                            Instant.parse("2023-01-02T13:33:56Z"),
-                            Location(
-                                null,
-                                GeoPoint(43.754, -106.3652)
-                            )
-                        ),
-                    )
-                )
-            )
+    override suspend fun deleteAll() {
+        withWriteLock {
+            userIdToJourneys.clear()
+            journeyIdToJourney.clear()
+            journeyIdToUserId.clear()
         }
     }
 }

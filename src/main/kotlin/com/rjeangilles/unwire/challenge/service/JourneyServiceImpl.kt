@@ -31,5 +31,8 @@ class JourneyServiceImpl(
     override suspend fun deleteAllByUserId(userId: UserId) {
         repository.deleteAllByUserId(userId)
     }
+    override suspend fun deleteAll() {
+        repository.deleteAll()
+    }
 
 }
