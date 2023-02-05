@@ -2,6 +2,7 @@ package com.rjeangilles.unwire.challenge
 
 import com.rjeangilles.unwire.challenge.model.*
 import com.rjeangilles.unwire.challenge.service.JourneyService
+import com.rjeangilles.unwire.challenge.service.UserService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -14,10 +15,10 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.time.Instant
 
-
 @SpringBootTest
 @AutoConfigureWebTestClient
 class WebLayerTests {
+    @Autowired private lateinit var userService: UserService
     @Autowired private lateinit var journeyService: JourneyService
     @Autowired private lateinit var webTestClient: WebTestClient
 
@@ -33,8 +34,17 @@ class WebLayerTests {
 
         //region fixture init
         runBlocking {
-            user1Id = 1
-            user2Id = 2
+            user1Id = userService.create(
+                User(
+                    name = "Foo"
+                )
+            ).id
+            user2Id = userService.create(
+                User(
+                    name = "Bar"
+                )
+            ).id
+
             journey1Id = journeyService.create(
                 user1Id!!,
                 Journey(

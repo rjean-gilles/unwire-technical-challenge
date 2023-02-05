@@ -12,6 +12,6 @@ interface JourneyRepository {
     suspend fun findById(journeyId: JourneyId): Optional<Journey>
     suspend fun existsById(journeyId: JourneyId): Boolean
     suspend fun deleteById(journeyId: JourneyId)
-    suspend fun deleteAllByUserId(userId: JourneyId)
+    suspend fun deleteAllByUserId(userId: UserId)
     suspend fun deleteAll()
 }

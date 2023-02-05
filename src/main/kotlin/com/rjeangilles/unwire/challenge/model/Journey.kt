@@ -36,4 +36,4 @@ data class Journey(
     val endAddress: String? = null,
     val endLocation: Location? = null,
     val steps: List<Step> = emptyList(),
-)// : Serializable
+)

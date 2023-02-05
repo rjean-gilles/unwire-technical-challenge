@@ -10,6 +10,7 @@ interface JourneyService {
     suspend fun create(userId: UserId, newJourney: Journey): Journey
     suspend fun getAllByUserId(userId: UserId): Iterable<Journey>
     suspend fun getById(journeyId: JourneyId): Journey
+    suspend fun existsById(journeyId: JourneyId): Boolean
     suspend fun deleteById(journeyId: JourneyId)
     suspend fun deleteAllByUserId(userId: UserId)
     suspend fun deleteAll()

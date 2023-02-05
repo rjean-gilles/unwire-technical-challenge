@@ -1,10 +1,10 @@
 package com.rjeangilles.unwire.challenge
 
 import com.rjeangilles.unwire.challenge.model.*
+import com.rjeangilles.unwire.challenge.repository.JourneyRepository
+import com.rjeangilles.unwire.challenge.repository.UserRepository
 import com.rjeangilles.unwire.challenge.repository.test.LoadTestingDataLoader
-import com.rjeangilles.unwire.challenge.service.JourneyService
 import kotlinx.coroutines.*
-import org.instancio.Instancio
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,7 +29,8 @@ class PerfTests {
     // Number of concurrent requests
     private val concurrentRequestCount: Int = 10
 
-    @Autowired private lateinit var journeyService: JourneyService
+    @Autowired private lateinit var userRepository: UserRepository
+    @Autowired private lateinit var journeyRepository: JourneyRepository
     @Autowired private lateinit var webTestClient: WebTestClient
 
     private lateinit var dataLoader: LoadTestingDataLoader
@@ -39,8 +40,8 @@ class PerfTests {
     @BeforeEach
     fun setUp() {
         runBlocking {
-            journeyService.deleteAll()
-            dataLoader = LoadTestingDataLoader(journeyService)
+            journeyRepository.deleteAll()
+            dataLoader = LoadTestingDataLoader(userRepository, journeyRepository)
             dataLoader.load()
         }
     }
@@ -103,7 +104,8 @@ class PerfTests {
     @AfterEach
     fun tearDown() {
         runBlocking {
-            journeyService.deleteAll()
+            userRepository.deleteAll()
+            journeyRepository.deleteAll()
         }
     }
 }

@@ -16,15 +16,53 @@ The cache uses coroutines and only exposes suspending functions, which is techni
 not necessary here because everything is done in-memory (so there is no I/O pause to speak of). 
 However, a real production cache would involve I/O pauses and delays, and would therefore ideally
 be implemented with coroutines to avoid blocking.
-So by only exposing suspending functions in ```JourneyRepository```, we ensure
-that we can write a production-ready cache 
+So by only exposing suspending functions in ```JourneyRepository```, I ensure
+that I can write a production-ready cache 
 (by example backed by MongoDB or ElasticSearch) 
-that would be a drop-in replacement, while still not inroducing any blocking.
+that would be a drop-in replacement, while still not introducing any blocking.
+
+### Validations
+
+I explicitly handle the following error cases:
+
+- Invalid user id. In other words, the specified user id 
+  does not correspond to any existing user. This means that 
+  I had to implement a user repository to implement this check.
+- Invalid journey id. In other words the specified journey id
+  does not correspond to any existing journey.
+- An id was specified in a POST request (to create a new user/journey).
+  This is needed because I use the same model 
+  (```User``` and ```Journey``` data classes) for both the POST and 
+  GET requests. I simply defined the ```id``` field as nullable, so 
+  that it can be omitted in the POST request (the id will be assigned by the API).
+  To avoid any ambiguity on the fact that the id is assigned by the API 
+  (as opposed to being set by the caller), it is best to forbid 
+  specifying the id altogether in a POST request.
+
+### About the user id
+
+The instructions say that the endpoints need to receive the user id as a request header ```api-user-id```.
+This however seems to be contradicted by the fact that the second endpoint already takes the user id as part 
+of the path (```GET /user/:user_id/journeys```).
+I had to choose between one or the other. I ended up choosing to keep the user 
+id as part of the path, and not as a header, in good part because it fits better
+with the REST principles anyway. Indeed if the user id is specified via a header 
+and not via the path, we will end up having many distinct ```Journey``` resources 
+being served under the same URL, whereas the URL is supposed to uniquely identify
+a resource.
+
+### Running and testing the API
+
+```
+> gradlew bootRun
+```
+The server will listen on port 8080.
 
 ### Performance
 
 As required, there is a test case to evaluate the performance of the API, 
-in the form of a unit test named ```PerfTests```.
+in the form of a unit test named ```PerfTests```. The time taken by the test case
+to complete gives a rough idea of the speed of a request/response round-trip.
 
 As unit tests are not really suited to performance/load testing, I also 
 created some [Gatling](https://gatling.io) simulations.

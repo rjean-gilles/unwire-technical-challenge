@@ -1,20 +1,22 @@
 package com.rjeangilles.unwire.challenge.repository.test
 
 import com.rjeangilles.unwire.challenge.model.*
-import com.rjeangilles.unwire.challenge.service.JourneyService
+import com.rjeangilles.unwire.challenge.repository.JourneyRepository
+import com.rjeangilles.unwire.challenge.repository.UserRepository
 import kotlinx.coroutines.*
 import org.instancio.Instancio
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 private val log: Logger = LoggerFactory.getLogger("LoadTestingDataLoader")
 
 /**
- * Generates random Journey instances suitable for tests
+ * Generates Journey instances suitable for tests
  */
-private class RandomTestJourneyGenerator(
-    private val journeyService: JourneyService
+private class TestJourneyGenerator(
+    private val journeyRepository: JourneyRepository
 ) {
     private val templates = arrayOfNulls<Journey>(10)
     private val rng: Random = Random(123L)
@@ -32,7 +34,7 @@ private class RandomTestJourneyGenerator(
     }
 
     suspend fun create(userId: UserId): Journey {
-        return journeyService.create(
+        return journeyRepository.create(
             userId,
             templates[rng.nextInt(templates.size)]!!
         )
@@ -40,15 +42,21 @@ private class RandomTestJourneyGenerator(
 }
 
 /**
- * Generates random Users suitable for tests
+ * Generates User instances suitable for tests
  */
-private class RandomTestUserGenerator(
+private class TestUserGenerator(
+    private val userRepository: UserRepository,
     private val maxJourneys: Int
 ) {
     private val rng: Random = Random(456L)
+    private val generatedCount = AtomicLong()
 
-    suspend fun create(): UserId {
-        return rng.nextLong()
+    suspend fun create(): User {
+        return userRepository.create(
+            User(
+                name = "Generated User #" + generatedCount.incrementAndGet()
+            )
+        )
     }
     suspend fun journeyCount(): Int {
         return rng.nextInt(maxJourneys)
@@ -56,11 +64,12 @@ private class RandomTestUserGenerator(
 }
 
 /**
- * Loads test data into the Journey repository, for use before
- * performing load testing.
+ * Loads test data into the repositories,
+ * for use before performing load testing.
  */
 class LoadTestingDataLoader(
-    private val journeyService: JourneyService,
+    private val userRepository: UserRepository,
+    private val journeyRepository: JourneyRepository,
     // The number of users we generate as a fixture for the performance test
     private val generatedUserCount: Int = 1_000_000,
     // The maximum number of journeys we generate per use
@@ -72,8 +81,8 @@ class LoadTestingDataLoader(
     val generatedJourneyIds: List<JourneyId> get() = _generatedJourneyIds
     private val _generatedJourneyIds = arrayListOf<JourneyId>()
 
-    private val userGenerator = RandomTestUserGenerator(maxGeneratedJourneyCountPer)
-    private val journeyGenerator = RandomTestJourneyGenerator(journeyService)
+    private val userGenerator = TestUserGenerator(userRepository, maxGeneratedJourneyCountPer)
+    private val journeyGenerator = TestJourneyGenerator(journeyRepository)
 
     fun load() {
         // We want to make sure that the data is loaded before accepting
@@ -84,11 +93,11 @@ class LoadTestingDataLoader(
                 if (u % 10000 == 0) {
                     log.info("Generating users: {} / {}", u, generatedUserCount)
                 }
-                val generatedUserId: Long = userGenerator.create()
-                _generatedUserIds.add(generatedUserId)
+                val generatedUser: User = userGenerator.create()
+                _generatedUserIds.add(generatedUser.id!!)
                 val generatedJourneyCount = userGenerator.journeyCount()
                 for (j in 1..generatedJourneyCount) {
-                    val journey = journeyGenerator.create(generatedUserId)
+                    val journey = journeyGenerator.create(generatedUser.id!!)
                     _generatedJourneyIds.add(journey.id!!)
                 }
             }
@@ -104,10 +113,10 @@ class LoadTestingDataLoader(
     }
 
     /**
-     * Returns a randomly chosen user id among all the user that
-     * have been generated and loaded into the repository
+     * Returns a randomly chosen user id among all the users that
+     * have been generated and loaded into the repository.
      */
     fun randomGeneratedUserId(rng: Random): UserId {
-        return _generatedJourneyIds[rng.nextInt(_generatedJourneyIds.size)]
+        return _generatedUserIds[rng.nextInt(_generatedUserIds.size)]
     }
 }
