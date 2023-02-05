@@ -15,9 +15,12 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.time.Instant
 
+/**
+ * Unit Tests on the Journey API (at the  Web Layer, doing actual HTTP requests)
+ */
 @SpringBootTest
 @AutoConfigureWebTestClient
-class WebLayerTests {
+class APITests {
     @Autowired private lateinit var userService: UserService
     @Autowired private lateinit var journeyService: JourneyService
     @Autowired private lateinit var webTestClient: WebTestClient
@@ -180,7 +183,6 @@ class WebLayerTests {
             .jsonPath("\$[0].endAddress").isEqualTo("2100 W Genesee Turnpike")
             .jsonPath("\$[1].startAddress").isEqualTo("1620 S Mission St")
             .jsonPath("\$[1].endAddress").isEqualTo("1880 Willamette Falls Dr")
-
     }
 
     @Test
